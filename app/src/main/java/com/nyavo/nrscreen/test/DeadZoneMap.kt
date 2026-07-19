@@ -1,6 +1,6 @@
 package com.nyavo.nrscreen.test
 
-enum class ZoneState { UNTESTED, ALIVE, SUSPECT, DEAD }
+enum class ZoneState { UNTESTED, ALIVE, SUSPECT, DEAD, GHOST }
 
 data class GridCell(
     val row: Int,
@@ -8,7 +8,8 @@ data class GridCell(
     var state: ZoneState = ZoneState.UNTESTED,
     var confidence: Float = 1.0f,
     var missedTapCount: Int = 0,
-    var lastUpdatedTimestamp: Long = 0L
+    var lastUpdatedTimestamp: Long = 0L,
+    var activatedAt: Long = 0L
 )
 
 class DeadZoneMap(val rows: Int, val cols: Int) {
