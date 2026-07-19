@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextAppearance.Nyavscrn.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_background</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_background</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_background</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/on_surface</item>
+    </style>
+    <style name="TextAppearance.Nyavscrn.Caption" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/vt323</item>
+        <item name="android:textColor">@color/text_muted</item>
+    </style>
+</resources>
