@@ -29,7 +29,9 @@ class GridTestActivity : AppCompatActivity() {
             if (percent > 0.60 && timeSinceLastDiscovery > 5000 && finishButton.visibility != View.VISIBLE) {
                 finishButton.visibility = View.VISIBLE
                 finishButton.alpha = 0f
-                finishButton.animate().alpha(1f).setDuration(400).start()
+                finishButton.animate().alpha(1f).setDuration(500).start()
+                instructionText.text = "Balayage termine. Appuyez pour voir le rapport."
+                instructionText.visibility = View.VISIBLE
             }
             handler.postDelayed(this, 500)
         }
@@ -38,6 +40,7 @@ class GridTestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_grid_test)
+        enterImmersiveMode()
 
         val map = DeadZoneMap(GridTestView.ROWS, GridTestView.COLS)
         DeadZoneMapHolder.current = map
@@ -50,11 +53,10 @@ class GridTestActivity : AppCompatActivity() {
         gridTestView.onCellDiscovered = { count ->
             discoveredCount += count
             lastDiscoveryTime = System.currentTimeMillis()
-            if (instructionText.visibility != View.GONE) {
-                instructionText.visibility = View.GONE
-            }
             if (finishButton.visibility == View.VISIBLE) {
                 finishButton.visibility = View.GONE
+                instructionText.text = "Balayez l'ecran sans pause. Ne levez pas le doigt."
+                instructionText.visibility = View.VISIBLE
             }
         }
 
@@ -67,8 +69,25 @@ class GridTestActivity : AppCompatActivity() {
         }
 
         finishButton.visibility = View.GONE
+        instructionText.text = "Balayez l'ecran sans pause. Ne levez pas le doigt."
         lastDiscoveryTime = System.currentTimeMillis()
         handler.post(completionChecker)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) enterImmersiveMode()
+    }
+
+    private fun enterImmersiveMode() {
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        )
     }
 
     override fun onDestroy() {

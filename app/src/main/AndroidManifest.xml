@@ -11,13 +11,17 @@
         android:theme="@style/Theme.Nyavscrn">
 
         <activity
-            android:name=".test.GridTestActivity"
+            android:name=".test.OnboardingActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".test.GridTestActivity"
+            android:exported="false" />
 
         <activity
             android:name=".test.DeadZoneMapActivity"
