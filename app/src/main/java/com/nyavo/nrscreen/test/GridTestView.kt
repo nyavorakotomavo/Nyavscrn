@@ -30,6 +30,7 @@ class GridTestView @JvmOverloads constructor(
 
     var deadZoneMap: DeadZoneMap? = null
     var onCellDiscovered: ((Int) -> Unit)? = null
+    var ghostDetectionMode = false
 
     private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     private val ripples = mutableListOf<Ripple>()
@@ -119,73 +120,66 @@ class GridTestView @JvmOverloads constructor(
             }
         }
 
-        if (isTouching && touchX >= 0 && touchY >= 0) {
+        if (isTouching && touchX >= 0 && touchY >= 0 && !ghostDetectionMode) {
             drawPixelGlow(canvas, map, touchX, touchY)
         }
 
-        val density = resources.displayMetrics.density
-        val iter = ripples.iterator()
-        while (iter.hasNext()) {
-            val ripple = iter.next()
-            val age = now - ripple.startTime
-            if (age > RIPPLE_DURATION) { iter.remove(); continue }
+        if (!ghostDetectionMode) {
+            val density = resources.displayMetrics.density
+            val iter = ripples.iterator()
+            while (iter.hasNext()) {
+                val ripple = iter.next()
+                val age = now - ripple.startTime
+                if (age > RIPPLE_DURATION) { iter.remove(); continue }
 
-            val globalProg = age / RIPPLE_DURATION.toFloat()
-
-            ripple.rings.forEachIndexed { idx, ring ->
-                val ringProg = (globalProg / ring.speedMul).coerceAtMost(1f)
-                if (ringProg >= 1f) return@forEachIndexed
-
-                val eased = interpolator.getInterpolation(ringProg)
-                val radius = eased * ring.maxRadiusDp * density
-                val alpha = ((1f - eased) * 255 * ring.maxAlphaRatio).toInt()
-                if (alpha <= 0 || radius <= 0) return@forEachIndexed
-
-                val shader = RadialGradient(
-                    ripple.cx, ripple.cy, radius,
-                    intArrayOf(
-                        Color.argb(alpha, 103, 232, 249),
-                        Color.argb((alpha * 0.55f).toInt(), 34, 211, 238),
-                        Color.argb(0, 11, 15, 31)
-                    ),
-                    floatArrayOf(0.0f, 0.45f, 1.0f),
-                    Shader.TileMode.CLAMP
-                )
-                ripplePaints[idx].shader = shader
-                canvas.drawCircle(ripple.cx, ripple.cy, radius, ripplePaints[idx])
-                ripplePaints[idx].shader = null
+                val globalProg = age / RIPPLE_DURATION.toFloat()
+                ripple.rings.forEachIndexed { idx, ring ->
+                    val ringProg = (globalProg / ring.speedMul).coerceAtMost(1f)
+                    if (ringProg >= 1f) return@forEachIndexed
+                    val eased = interpolator.getInterpolation(ringProg)
+                    val radius = eased * ring.maxRadiusDp * density
+                    val alpha = ((1f - eased) * 255 * ring.maxAlphaRatio).toInt()
+                    if (alpha <= 0 || radius <= 0) return@forEachIndexed
+                    val shader = RadialGradient(
+                        ripple.cx, ripple.cy, radius,
+                        intArrayOf(
+                            Color.argb(alpha, 103, 232, 249),
+                            Color.argb((alpha * 0.55f).toInt(), 34, 211, 238),
+                            Color.argb(0, 11, 15, 31)
+                        ),
+                        floatArrayOf(0.0f, 0.45f, 1.0f),
+                        Shader.TileMode.CLAMP
+                    )
+                    ripplePaints[idx].shader = shader
+                    canvas.drawCircle(ripple.cx, ripple.cy, radius, ripplePaints[idx])
+                    ripplePaints[idx].shader = null
+                }
             }
+            if (ripples.isNotEmpty() || isTouching) invalidate()
         }
-
-        if (ripples.isNotEmpty() || isTouching) invalidate()
     }
 
     private fun drawPixelGlow(canvas: Canvas, map: DeadZoneMap, x: Float, y: Float) {
         val centerCol = ((x - offsetX) / cellSize).toInt().coerceIn(0, COLS - 1)
         val centerRow = ((y - offsetY) / cellSize).toInt().coerceIn(0, ROWS - 1)
-
         for (dr in -PIXEL_GLOW_RADIUS..PIXEL_GLOW_RADIUS) {
             for (dc in -PIXEL_GLOW_RADIUS..PIXEL_GLOW_RADIUS) {
                 val dist = sqrt((dr * dr + dc * dc).toFloat())
                 if (dist > PIXEL_GLOW_RADIUS) continue
-
                 val r = centerRow + dr
                 val c = centerCol + dc
                 if (r !in 0 until ROWS || c !in 0 until COLS) continue
-
                 val cell = map.cellAt(r, c)
                 val left = offsetX + c * cellSize
                 val top = offsetY + r * cellSize
                 val right = left + cellSize
                 val bottom = top + cellSize
-
                 val alpha = when {
                     dist <= 1.5f -> 180
                     dist <= 2.5f -> 120
                     dist <= 3.5f -> 70
                     else -> 40
                 }
-
                 pixelGlowPaint.color = if (cell.state == ZoneState.UNTESTED) {
                     Color.argb(alpha, 103, 232, 249)
                 } else {
@@ -207,19 +201,26 @@ class GridTestView @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val map = deadZoneMap ?: return true
-
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 isTouching = true
                 touchX = event.x; touchY = event.y
                 val count = processTouch(map, event.x, event.y)
-                if (count > 0) vibrate()
+                if (count > 0 && !ghostDetectionMode) vibrate()
+                if (count > 0 && !ghostDetectionMode) {
+                    ripples.add(Ripple(x, y, System.currentTimeMillis()))
+                    onCellDiscovered?.invoke(count)
+                }
                 invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
                 touchX = event.x; touchY = event.y
                 val count = processTouch(map, event.x, event.y)
-                if (count > 0) vibrate()
+                if (count > 0 && !ghostDetectionMode) vibrate()
+                if (count > 0 && !ghostDetectionMode) {
+                    ripples.add(Ripple(x, y, System.currentTimeMillis()))
+                    onCellDiscovered?.invoke(count)
+                }
                 invalidate()
             }
             MotionEvent.ACTION_UP -> {
@@ -235,7 +236,6 @@ class GridTestView @JvmOverloads constructor(
         val centerCol = ((x - offsetX) / cellSize).toInt().coerceIn(0, COLS - 1)
         val centerRow = ((y - offsetY) / cellSize).toInt().coerceIn(0, ROWS - 1)
         var newCount = 0
-
         for (dr in -BRUSH_RADIUS..BRUSH_RADIUS) {
             for (dc in -BRUSH_RADIUS..BRUSH_RADIUS) {
                 val r = centerRow + dr
@@ -244,17 +244,16 @@ class GridTestView @JvmOverloads constructor(
                     val cell = map.cellAt(r, c)
                     cell.tapAttempts++
                     if (cell.state == ZoneState.UNTESTED) {
-                        cell.state = ZoneState.ALIVE
+                        if (ghostDetectionMode) {
+                            cell.state = ZoneState.GHOST
+                        } else {
+                            cell.state = ZoneState.ALIVE
+                        }
                         cell.activatedAt = System.currentTimeMillis()
                         newCount++
                     }
                 }
             }
-        }
-
-        if (newCount > 0) {
-            ripples.add(Ripple(x, y, System.currentTimeMillis()))
-            onCellDiscovered?.invoke(newCount)
         }
         return newCount
     }
@@ -263,7 +262,6 @@ class GridTestView @JvmOverloads constructor(
         val now = System.currentTimeMillis()
         if (now - lastVibrationTime < VIBRATION_COOLDOWN_MS) return
         lastVibrationTime = now
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {

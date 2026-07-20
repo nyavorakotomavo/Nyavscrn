@@ -51,7 +51,7 @@ class OnboardingActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("nyavscrn_prefs", Context.MODE_PRIVATE)
         if (prefs.getBoolean("has_seen_onboarding", false)) {
-            startActivity(Intent(this, GridTestActivity::class.java))
+            startActivity(Intent(this, CalibrationActivity::class.java))
             finish()
             return
         }
@@ -82,7 +82,7 @@ class OnboardingActivity : AppCompatActivity() {
                 recyclerView.smoothScrollToPosition(currentPage + 1)
             } else {
                 prefs.edit().putBoolean("has_seen_onboarding", true).apply()
-                startActivity(Intent(this, GridTestActivity::class.java))
+                startActivity(Intent(this, CalibrationActivity::class.java))
                 finish()
             }
         }
