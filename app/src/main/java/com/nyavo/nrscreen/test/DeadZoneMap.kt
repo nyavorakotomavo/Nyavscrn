@@ -1,6 +1,6 @@
 package com.nyavo.nrscreen.test
 
-enum class ZoneState { UNTESTED, ALIVE, SUSPECT, DEAD, GHOST }
+enum class ZoneState { UNTESTED, ALIVE, SUSPECT, DEAD, GHOST, DEGRADED }
 
 data class GridCell(
     val row: Int,
@@ -9,7 +9,9 @@ data class GridCell(
     var confidence: Float = 1.0f,
     var missedTapCount: Int = 0,
     var lastUpdatedTimestamp: Long = 0L,
-    var activatedAt: Long = 0L
+    var activatedAt: Long = 0L,
+    var tapAttempts: Int = 0,
+    var selfActivated: Boolean = false
 )
 
 class DeadZoneMap(val rows: Int, val cols: Int) {
@@ -21,6 +23,7 @@ class DeadZoneMap(val rows: Int, val cols: Int) {
     fun allCells(): List<GridCell> = cells.flatten()
     fun deadCells(): List<GridCell> = cells.flatten().filter { it.state == ZoneState.DEAD }
     fun suspectCells(): List<GridCell> = cells.flatten().filter { it.state == ZoneState.SUSPECT }
+    fun degradedCells(): List<GridCell> = cells.flatten().filter { it.state == ZoneState.DEGRADED }
     fun deadPercentage(): Float = if (rows * cols == 0) 0f else (deadCells().size.toFloat() / (rows * cols)) * 100f
 
     fun recordMissedTap(row: Int, col: Int) {
@@ -34,10 +37,12 @@ class DeadZoneMap(val rows: Int, val cols: Int) {
         }
     }
 
-    fun finalizeUntested() {
+    fun finalizeTest() {
         cells.flatten().forEach {
-            if (it.state == ZoneState.UNTESTED) {
-                it.state = ZoneState.DEAD
+            when {
+                it.state == ZoneState.UNTESTED -> it.state = ZoneState.DEAD
+                it.state == ZoneState.ALIVE && it.tapAttempts >= 3 -> it.state = ZoneState.DEGRADED
+                it.state == ZoneState.ALIVE && it.selfActivated -> it.state = ZoneState.GHOST
             }
         }
     }

@@ -11,6 +11,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
 import com.nyavo.nrscreen.R
+import kotlin.math.sqrt
 
 class GridTestView @JvmOverloads constructor(
     context: Context,
@@ -22,7 +23,9 @@ class GridTestView @JvmOverloads constructor(
         const val ROWS = 60
         const val COLS = 120
         const val BRUSH_RADIUS = 2
+        const val PIXEL_GLOW_RADIUS = 4
         const val RIPPLE_DURATION = 900L
+        const val VIBRATION_COOLDOWN_MS = 80L
     }
 
     var deadZoneMap: DeadZoneMap? = null
@@ -33,22 +36,26 @@ class GridTestView @JvmOverloads constructor(
     private var touchX = -1f
     private var touchY = -1f
     private var isTouching = false
+    private var lastVibrationTime = 0L
 
     private val cellPaint = Paint()
+    private val pixelGlowPaint = Paint()
     private val ripplePaints = List(4) { Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL } }
-    private val glowPaints = List(3) { Paint(Paint.ANTI_ALIAS_FLAG) }
     private val interpolator = DecelerateInterpolator(1.8f)
 
     private val untestedColor: Int
     private val deadColor: Int
     private val suspectColor: Int
     private val ghostColor: Int
+    private val degradedColor: Int
     private val cyan400: Int
     private val cyan500: Int
     private val cyan600: Int
-    private val cyan300: Int
-    private val nebula400: Int
-    private val cosmos950: Int
+    private val nebula300: Int
+
+    private var cellSize = 0f
+    private var offsetX = 0f
+    private var offsetY = 0f
 
     private data class Ripple(
         val cx: Float,
@@ -70,37 +77,50 @@ class GridTestView @JvmOverloads constructor(
         deadColor = ContextCompat.getColor(context, R.color.state_dead)
         suspectColor = ContextCompat.getColor(context, R.color.state_suspect)
         ghostColor = ContextCompat.getColor(context, R.color.state_ghost)
+        degradedColor = ContextCompat.getColor(context, R.color.nebula_700)
         cyan400 = ContextCompat.getColor(context, R.color.cyan_400)
         cyan500 = ContextCompat.getColor(context, R.color.cyan_500)
         cyan600 = ContextCompat.getColor(context, R.color.cyan_600)
-        cyan300 = ContextCompat.getColor(context, R.color.cyan_300)
-        nebula400 = ContextCompat.getColor(context, R.color.nebula_400)
-        cosmos950 = ContextCompat.getColor(context, R.color.cosmos_950)
+        nebula300 = ContextCompat.getColor(context, R.color.nebula_300)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        val sizeW = w.toFloat() / COLS
+        val sizeH = h.toFloat() / ROWS
+        cellSize = minOf(sizeW, sizeH)
+        offsetX = (w - COLS * cellSize) / 2f
+        offsetY = (h - ROWS * cellSize) / 2f
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val map = deadZoneMap ?: return
-        val cellW = width.toFloat() / COLS
-        val cellH = height.toFloat() / ROWS
         val now = System.currentTimeMillis()
+
+        canvas.drawColor(ContextCompat.getColor(context, R.color.cosmos_950))
 
         for (r in 0 until ROWS) {
             for (c in 0 until COLS) {
                 val cell = map.cellAt(r, c)
-                val left = c * cellW
-                val top = r * cellH
-                val right = left + cellW
-                val bottom = top + cellH
+                val left = offsetX + c * cellSize
+                val top = offsetY + r * cellSize
+                val right = left + cellSize
+                val bottom = top + cellSize
                 cellPaint.color = when (cell.state) {
                     ZoneState.UNTESTED -> untestedColor
                     ZoneState.ALIVE -> aliveColorFor(cell, now)
                     ZoneState.DEAD -> deadColor
                     ZoneState.SUSPECT -> suspectColor
                     ZoneState.GHOST -> ghostColor
+                    ZoneState.DEGRADED -> degradedColor
                 }
                 canvas.drawRect(left, top, right, bottom, cellPaint)
             }
+        }
+
+        if (isTouching && touchX >= 0 && touchY >= 0) {
+            drawPixelGlow(canvas, map, touchX, touchY)
         }
 
         val density = resources.displayMetrics.density
@@ -137,37 +157,43 @@ class GridTestView @JvmOverloads constructor(
             }
         }
 
-        if (isTouching && touchX >= 0 && touchY >= 0) {
-            val baseR = cellW * 6
-
-            glowPaints[0].shader = RadialGradient(
-                touchX, touchY, baseR * 1.6f,
-                Color.argb(35, 167, 139, 250),
-                Color.argb(0, 11, 15, 31),
-                Shader.TileMode.CLAMP
-            )
-            canvas.drawCircle(touchX, touchY, baseR * 1.6f, glowPaints[0])
-
-            glowPaints[1].shader = RadialGradient(
-                touchX, touchY, baseR,
-                Color.argb(70, 34, 211, 238),
-                Color.argb(0, 11, 15, 31),
-                Shader.TileMode.CLAMP
-            )
-            canvas.drawCircle(touchX, touchY, baseR, glowPaints[1])
-
-            glowPaints[2].shader = RadialGradient(
-                touchX, touchY, baseR * 0.35f,
-                Color.argb(140, 103, 232, 249),
-                Color.argb(0, 34, 211, 238),
-                Shader.TileMode.CLAMP
-            )
-            canvas.drawCircle(touchX, touchY, baseR * 0.35f, glowPaints[2])
-
-            glowPaints.forEach { it.shader = null }
-        }
-
         if (ripples.isNotEmpty() || isTouching) invalidate()
+    }
+
+    private fun drawPixelGlow(canvas: Canvas, map: DeadZoneMap, x: Float, y: Float) {
+        val centerCol = ((x - offsetX) / cellSize).toInt().coerceIn(0, COLS - 1)
+        val centerRow = ((y - offsetY) / cellSize).toInt().coerceIn(0, ROWS - 1)
+
+        for (dr in -PIXEL_GLOW_RADIUS..PIXEL_GLOW_RADIUS) {
+            for (dc in -PIXEL_GLOW_RADIUS..PIXEL_GLOW_RADIUS) {
+                val dist = sqrt((dr * dr + dc * dc).toFloat())
+                if (dist > PIXEL_GLOW_RADIUS) continue
+
+                val r = centerRow + dr
+                val c = centerCol + dc
+                if (r !in 0 until ROWS || c !in 0 until COLS) continue
+
+                val cell = map.cellAt(r, c)
+                val left = offsetX + c * cellSize
+                val top = offsetY + r * cellSize
+                val right = left + cellSize
+                val bottom = top + cellSize
+
+                val alpha = when {
+                    dist <= 1.5f -> 180
+                    dist <= 2.5f -> 120
+                    dist <= 3.5f -> 70
+                    else -> 40
+                }
+
+                pixelGlowPaint.color = if (cell.state == ZoneState.UNTESTED) {
+                    Color.argb(alpha, 103, 232, 249)
+                } else {
+                    Color.argb(alpha, 196, 181, 253)
+                }
+                canvas.drawRect(left, top, right, bottom, pixelGlowPaint)
+            }
+        }
     }
 
     private fun aliveColorFor(cell: GridCell, now: Long): Int {
@@ -181,20 +207,18 @@ class GridTestView @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val map = deadZoneMap ?: return true
-        val cellW = width.toFloat() / COLS
-        val cellH = height.toFloat() / ROWS
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 isTouching = true
                 touchX = event.x; touchY = event.y
-                val count = processTouch(map, event.x, event.y, cellW, cellH)
+                val count = processTouch(map, event.x, event.y)
                 if (count > 0) vibrate()
                 invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
                 touchX = event.x; touchY = event.y
-                val count = processTouch(map, event.x, event.y, cellW, cellH)
+                val count = processTouch(map, event.x, event.y)
                 if (count > 0) vibrate()
                 invalidate()
             }
@@ -207,9 +231,9 @@ class GridTestView @JvmOverloads constructor(
         return true
     }
 
-    private fun processTouch(map: DeadZoneMap, x: Float, y: Float, cellW: Float, cellH: Float): Int {
-        val centerCol = (x / cellW).toInt().coerceIn(0, COLS - 1)
-        val centerRow = (y / cellH).toInt().coerceIn(0, ROWS - 1)
+    private fun processTouch(map: DeadZoneMap, x: Float, y: Float): Int {
+        val centerCol = ((x - offsetX) / cellSize).toInt().coerceIn(0, COLS - 1)
+        val centerRow = ((y - offsetY) / cellSize).toInt().coerceIn(0, ROWS - 1)
         var newCount = 0
 
         for (dr in -BRUSH_RADIUS..BRUSH_RADIUS) {
@@ -218,6 +242,7 @@ class GridTestView @JvmOverloads constructor(
                 val c = centerCol + dc
                 if (r in 0 until ROWS && c in 0 until COLS) {
                     val cell = map.cellAt(r, c)
+                    cell.tapAttempts++
                     if (cell.state == ZoneState.UNTESTED) {
                         cell.state = ZoneState.ALIVE
                         cell.activatedAt = System.currentTimeMillis()
@@ -235,6 +260,10 @@ class GridTestView @JvmOverloads constructor(
     }
 
     private fun vibrate() {
+        val now = System.currentTimeMillis()
+        if (now - lastVibrationTime < VIBRATION_COOLDOWN_MS) return
+        lastVibrationTime = now
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
@@ -244,7 +273,7 @@ class GridTestView @JvmOverloads constructor(
     }
 
     fun finalizeTest() {
-        deadZoneMap?.finalizeUntested()
+        deadZoneMap?.finalizeTest()
         invalidate()
     }
 }

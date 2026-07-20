@@ -1,6 +1,8 @@
 package com.nyavo.nrscreen.test
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,6 +22,7 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var nextButton: Button
     private lateinit var dots: List<View>
+    private lateinit var prefs: SharedPreferences
 
     private val pages = listOf(
         Page(
@@ -45,6 +48,14 @@ class OnboardingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        prefs = getSharedPreferences("nyavscrn_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("has_seen_onboarding", false)) {
+            startActivity(Intent(this, GridTestActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_onboarding)
 
         recyclerView = findViewById(R.id.recyclerView)
@@ -70,6 +81,7 @@ class OnboardingActivity : AppCompatActivity() {
             if (currentPage < pages.size - 1) {
                 recyclerView.smoothScrollToPosition(currentPage + 1)
             } else {
+                prefs.edit().putBoolean("has_seen_onboarding", true).apply()
                 startActivity(Intent(this, GridTestActivity::class.java))
                 finish()
             }

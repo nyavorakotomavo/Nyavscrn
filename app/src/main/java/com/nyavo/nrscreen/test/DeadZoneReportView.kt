@@ -39,11 +39,6 @@ class DeadZoneReportView @JvmOverloads constructor(
         style = Paint.Style.STROKE
         strokeWidth = 2f
     }
-    private val gridPaint = Paint().apply {
-        color = ContextCompat.getColor(context, R.color.cosmos_800)
-        strokeWidth = 0.5f
-        alpha = 60
-    }
 
     private var deadBlobs: List<Blob> = emptyList()
     private var suspectBlobs: List<Blob> = emptyList()
@@ -106,13 +101,6 @@ class DeadZoneReportView @JvmOverloads constructor(
         val cellH = height.toFloat() / map.rows
 
         canvas.drawColor(ContextCompat.getColor(context, R.color.cosmos_950))
-
-        for (r in 0..map.rows) {
-            canvas.drawLine(0f, r * cellH, width.toFloat(), r * cellH, gridPaint)
-        }
-        for (c in 0..map.cols) {
-            canvas.drawLine(c * cellW, 0f, c * cellW, height.toFloat(), gridPaint)
-        }
 
         for (blob in deadBlobs) {
             val l = blob.minCol * cellW

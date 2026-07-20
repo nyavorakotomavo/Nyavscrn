@@ -8,31 +8,33 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:gravity="center_horizontal"
         android:padding="@dimen/space_6">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginBottom="@dimen/space_4"
             android:text="Rapport de diagnostic"
             android:textAppearance="@style/TextAppearance.Nyavscrn.HeadlineLarge" />
 
-        <com.nyavo.nrscreen.test.DeadZoneReportView
-            android:id="@+id/reportView"
+        <com.nyavo.nrscreen.test.MiniGridView
+            android:id="@+id/miniGrid"
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="240dp"
             android:layout_marginBottom="@dimen/space_6" />
 
         <TextView
-            android:id="@+id/summaryText"
+            android:id="@+id/statsText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_6"
             android:background="@color/surface"
             android:padding="@dimen/space_4"
-            android:textAppearance="@style/TextAppearance.Nyavscrn.BodyLarge"
-            android:fontFamily="@font/vt323" />
+            android:fontFamily="@font/vt323"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:lineSpacingMultiplier="1.4" />
 
         <TextView
             android:layout_width="wrap_content"

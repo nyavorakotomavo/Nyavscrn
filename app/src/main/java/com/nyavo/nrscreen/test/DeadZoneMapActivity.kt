@@ -15,45 +15,50 @@ class DeadZoneMapActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_deadzone_map)
 
-        val reportView = findViewById<DeadZoneReportView>(R.id.reportView)
-        val summaryText = findViewById<TextView>(R.id.summaryText)
+        val miniGrid = findViewById<MiniGridView>(R.id.miniGrid)
+        val statsText = findViewById<TextView>(R.id.statsText)
         val legendContainer = findViewById<LinearLayout>(R.id.legendContainer)
         val map = DeadZoneMapHolder.current
 
         if (map == null) {
-            summaryText.text = "Aucun resultat disponible. Veuillez refaire le test."
+            statsText.text = "Aucun resultat. Veuillez refaire le test."
             return
         }
 
-        reportView.deadZoneMap = map
+        miniGrid.deadZoneMap = map
 
         val deadCount = map.deadCells().size
         val suspectCount = map.suspectCells().size
+        val degradedCount = map.degradedCells().size
         val aliveCount = map.allCells().count { it.state == ZoneState.ALIVE }
         val total = map.rows * map.cols
-        val percentage = map.deadPercentage()
+        val percent = map.deadPercentage()
 
-        summaryText.text = buildString {
-            append("Zones mortes detectees : $deadCount / $total\n")
-            append("Zones suspectes : $suspectCount\n")
-            append("Zones fonctionnelles : $aliveCount\n")
-            append("Taux de casse : ${"%.1f".format(percentage)}%")
+        statsText.text = buildString {
+            appendLine("Zones mortes : $deadCount")
+            appendLine("Zones degradees : $degradedCount")
+            appendLine("Zones suspectes : $suspectCount")
+            appendLine("Zones OK : $aliveCount")
+            appendLine("Total teste : ${deadCount + degradedCount + suspectCount + aliveCount} / $total")
+            appendLine("Taux de casse : ${"%.1f".format(percent)}%")
         }
 
-        addLegendItem(legendContainer, R.color.cyan_400, "Fonctionnelle (testee)")
-        addLegendItem(legendContainer, R.color.void_500, "Morte (non reactive)")
-        addLegendItem(legendContainer, R.color.star_400, "Suspecte (degradation)")
-        addLegendItem(legendContainer, R.color.cosmos_800, "Non testee (inconnu)")
+        addLegendItem(legendContainer, R.color.cyan_400, "Fonctionnelle")
+        addLegendItem(legendContainer, R.color.void_500, "Morte (ne repond pas)")
+        addLegendItem(legendContainer, R.color.nebula_700, "Degradee (3+ essais)")
+        addLegendItem(legendContainer, R.color.star_400, "Suspecte (instable)")
+        addLegendItem(legendContainer, R.color.nebula_600, "Fantome (tappe seule)")
+        addLegendItem(legendContainer, R.color.cosmos_800, "Non testee")
     }
 
     private fun addLegendItem(container: LinearLayout, colorRes: Int, label: String) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(0, 8, 0, 8)
+            setPadding(0, 12, 0, 12)
         }
 
         val square = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(48, 48).apply {
+            layoutParams = LinearLayout.LayoutParams(56, 56).apply {
                 marginEnd = 24
             }
             setBackgroundColor(ContextCompat.getColor(this@DeadZoneMapActivity, colorRes))
