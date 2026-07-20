@@ -1,6 +1,7 @@
 package com.nyavo.nrscreen.test
 
 import android.os.Bundle
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -60,7 +61,7 @@ class DeadZoneMapActivity : AppCompatActivity() {
 
         val text = TextView(this).apply {
             this.text = label
-            textAppearance = R.style.TextAppearance_Nyavscrn_BodyLarge
+            setTextAppearance(R.style.TextAppearance_Nyavscrn_BodyLarge)
             setTextColor(ContextCompat.getColor(this@DeadZoneMapActivity, R.color.text_primary))
         }
 

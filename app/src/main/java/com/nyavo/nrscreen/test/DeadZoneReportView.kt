@@ -84,7 +84,7 @@ class DeadZoneReportView @JvmOverloads constructor(
                         cr - 1 to cc, cr + 1 to cc,
                         cr to cc - 1, cr to cc + 1
                     )
-                    for (nr to nc in neighbors) {
+                    for ((nr, nc) in neighbors) {
                         if (nr in 0 until map.rows && nc in 0 until map.cols && !visited[nr][nc]) {
                             if (map.cellAt(nr, nc).state == state) {
                                 visited[nr][nc] = true

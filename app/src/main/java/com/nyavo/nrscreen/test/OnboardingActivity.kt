@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import android.widget.ViewFlipper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -84,7 +83,7 @@ class OnboardingActivity : AppCompatActivity() {
             val color = if (index == currentPage) pages[currentPage].colorRes else R.color.cosmos_700
             val drawable = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(ContextCompat.getColor(this, color))
+                setColor(ContextCompat.getColor(this@OnboardingActivity, color))
             }
             view.background = drawable
         }
