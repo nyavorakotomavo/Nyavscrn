@@ -42,14 +42,19 @@ class CalibrationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_calibration)
         enterImmersiveMode()
 
-        val map = DeadZoneMap(GridTestView.ROWS, GridTestView.COLS)
-        DeadZoneMapHolder.current = map
-
         gridTestView = findViewById(R.id.gridTestView)
         countdownText = findViewById(R.id.countdownText)
 
-        gridTestView.deadZoneMap = map
         gridTestView.ghostDetectionMode = true
+
+        // Recupere la map creee par GridTestView (avec les bonnes dimensions d'ecran)
+        // et la stocke pour le test qui suit
+        gridTestView.post {
+            val map = gridTestView.deadZoneMap
+            if (map != null) {
+                DeadZoneMapHolder.current = map
+            }
+        }
 
         countdownText.text = "Ne touchez pas l'ecran\n5"
         handler.postDelayed(countdownRunnable, 1000)

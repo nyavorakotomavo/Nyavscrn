@@ -23,10 +23,11 @@ class GridTestActivity : AppCompatActivity() {
 
     private var lastDiscoveryTime = 0L
     private var discoveredCount = 0
-    private val totalCells = GridTestView.ROWS * GridTestView.COLS
 
     private val completionChecker = object : Runnable {
         override fun run() {
+            val map = gridTestView.deadZoneMap ?: return
+            val totalCells = map.rows * map.cols
             val percent = discoveredCount.toFloat() / totalCells
             val timeSinceLastDiscovery = System.currentTimeMillis() - lastDiscoveryTime
             if (percent > 0.60 && timeSinceLastDiscovery > 5000 && finishButton.visibility != View.VISIBLE) {
@@ -45,14 +46,16 @@ class GridTestActivity : AppCompatActivity() {
         setContentView(R.layout.activity_grid_test)
         enterImmersiveMode()
 
-        val map = DeadZoneMap(GridTestView.ROWS, GridTestView.COLS)
-        DeadZoneMapHolder.current = map
-
         gridTestView = findViewById(R.id.gridTestView)
         finishButton = findViewById(R.id.finishButton)
         instructionText = findViewById(R.id.instructionText)
 
-        gridTestView.deadZoneMap = map
+        // Recupere la map de calibration si elle existe
+        val existingMap = DeadZoneMapHolder.current
+        if (existingMap != null) {
+            gridTestView.deadZoneMap = existingMap
+        }
+
         gridTestView.onCellDiscovered = { count ->
             discoveredCount += count
             lastDiscoveryTime = System.currentTimeMillis()
