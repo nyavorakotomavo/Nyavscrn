@@ -1,31 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     android:padding="@dimen/space_6">
 
-    <View
-        android:id="@+id/illustration"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_marginBottom="@dimen/space_8" />
-
-    <TextView
-        android:id="@+id/titleText"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/space_4"
-        android:textAppearance="@style/TextAppearance.Nyavscrn.HeadlineLarge"
-        android:gravity="center" />
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-    <TextView
-        android:id="@+id/descText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/space_6"
-        android:textAppearance="@style/TextAppearance.Nyavscrn.BodyLarge"
-        android:gravity="center" />
+        <FrameLayout
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginBottom="@dimen/space_10">
 
-</LinearLayout>
+            <com.nyavo.nrscreen.ui.OnboardingIllustrationView
+                android:id="@+id/illustration"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_illustration_glow"
+                android:alpha="0.4" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_4"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Nyavscrn.HeadlineLarge"
+            android:textColor="@color/text_primary"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/descText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_8"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Nyavscrn.BodyLarge"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingMultiplier="1.3" />
+
+    </LinearLayout>
+
+</FrameLayout>

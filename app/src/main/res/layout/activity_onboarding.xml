@@ -1,55 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_nebula_gradient" />
+
+    <com.nyavo.nrscreen.ui.StarfieldView
+        android:id="@+id/starfieldView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.3" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:overScrollMode="never" />
+        android:overScrollMode="never"
+        android:clipToPadding="false" />
 
     <LinearLayout
         android:id="@+id/indicators"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center|bottom"
-        android:layout_marginBottom="120dp"
-        android:orientation="horizontal">
+        android:layout_marginBottom="160dp"
+        android:orientation="horizontal"
+        android:gravity="center">
 
         <View
             android:id="@+id/dot0"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_margin="6dp"
-            android:background="@drawable/ic_launcher" />
+            android:layout_width="24dp"
+            android:layout_height="8dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/dot_active" />
 
         <View
             android:id="@+id/dot1"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_margin="6dp"
-            android:background="@drawable/ic_launcher" />
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/dot_inactive" />
 
         <View
             android:id="@+id/dot2"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_margin="6dp"
-            android:background="@drawable/ic_launcher" />
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/dot_inactive" />
     </LinearLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/nextButton"
-        style="@style/Widget.Material3.Button"
+        style="@style/Widget.Nyavscrn.Button.Primary"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_gravity="center|bottom"
+        android:layout_marginBottom="64dp"
+        android:paddingHorizontal="48dp"
+        android:text="Suivant"
+        android:textAppearance="@style/TextAppearance.Nyavscrn.LabelLarge"
+        app:cornerRadius="@dimen/radius_full" />
+
+    <TextView
+        android:id="@+id/skipText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center|bottom"
-        android:layout_marginBottom="48dp"
-        android:paddingHorizontal="@dimen/space_10"
-        android:paddingVertical="@dimen/space_4"
-        android:text="Suivant"
-        android:textAppearance="@style/TextAppearance.Nyavscrn.HeadlineMedium" />
+        android:layout_marginBottom="24dp"
+        android:text="Passer"
+        android:textAppearance="@style/TextAppearance.Nyavscrn.BodyMedium"
+        android:textColor="@color/text_muted"
+        android:padding="@dimen/space_2"
+        android:visibility="gone" />
 
 </FrameLayout>
