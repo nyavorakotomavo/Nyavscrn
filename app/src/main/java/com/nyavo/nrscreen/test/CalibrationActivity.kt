@@ -8,6 +8,8 @@ import android.os.Looper
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.view.animation.AnimationUtils
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.nyavo.nrscreen.R
@@ -17,20 +19,28 @@ class CalibrationActivity : AppCompatActivity() {
 
     private lateinit var gridTestView: GridTestView
     private lateinit var countdownText: TextView
+    private lateinit var countdownNumber: TextView
+    private lateinit var countdownProgress: ProgressBar
     private val handler = Handler(Looper.getMainLooper())
     private var secondsLeft = 5
+    private val totalSeconds = 5
 
     private val countdownRunnable = object : Runnable {
         override fun run() {
             if (secondsLeft > 0) {
-                countdownText.text = "Ne touchez pas l'ecran\n$secondsLeft"
+                countdownNumber.text = secondsLeft.toString()
+                countdownNumber.startAnimation(AnimationUtils.loadAnimation(this@CalibrationActivity, R.anim.count_bounce))
+                countdownProgress.progress = secondsLeft
                 secondsLeft--
                 handler.postDelayed(this, 1000)
             } else {
+                countdownNumber.text = ""
                 countdownText.text = "Analyse terminee"
+                countdownText.startAnimation(AnimationUtils.loadAnimation(this@CalibrationActivity, R.anim.fade_in))
                 handler.postDelayed({
                     val intent = Intent(this@CalibrationActivity, GridTestActivity::class.java)
                     startActivity(intent)
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
                     finish()
                 }, 800)
             }
@@ -44,6 +54,11 @@ class CalibrationActivity : AppCompatActivity() {
 
         gridTestView = findViewById(R.id.gridTestView)
         countdownText = findViewById(R.id.countdownText)
+        countdownNumber = findViewById(R.id.countdownNumber)
+        countdownProgress = findViewById(R.id.countdownProgress)
+
+        countdownProgress.max = totalSeconds
+        countdownProgress.progress = totalSeconds
 
         gridTestView.ghostDetectionMode = true
 
@@ -54,7 +69,8 @@ class CalibrationActivity : AppCompatActivity() {
             }
         }
 
-        countdownText.text = "Ne touchez pas l'ecran\n5"
+        countdownNumber.text = totalSeconds.toString()
+        countdownText.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in))
         handler.postDelayed(countdownRunnable, 1000)
     }
 
