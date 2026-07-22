@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.nyavo.nrscreen.R
+import com.nyavo.nrscreen.ui.GradientTextView
 import com.nyavo.nrscreen.ui.OnboardingIllustrationView
 
 class OnboardingActivity : AppCompatActivity() {
@@ -106,7 +107,7 @@ class OnboardingActivity : AppCompatActivity() {
 
     private fun updateIndicators() {
         dots.forEachIndexed { index, view ->
-            val targetWidth = if (index == currentPage) 24.dp else 8.dp
+            val targetWidth = if (index == currentPage) (24 * resources.displayMetrics.density).toInt() else (8 * resources.displayMetrics.density).toInt()
             val targetColor = if (index == currentPage) pages[currentPage].colorRes else R.color.cosmos_700
 
             view.animate()
@@ -125,14 +126,12 @@ class OnboardingActivity : AppCompatActivity() {
         skipText.visibility = if (currentPage == pages.size - 1) View.GONE else View.VISIBLE
     }
 
-    private val Int.dp: Int get() = (this * resources.displayMetrics.density).toInt()
-
     class OnboardingAdapter(private val pages: List<Page>) :
         RecyclerView.Adapter<OnboardingAdapter.VH>() {
 
         class VH(view: View) : RecyclerView.ViewHolder(view) {
             val illustration: OnboardingIllustrationView = view.findViewById(R.id.illustration)
-            val title: TextView = view.findViewById(R.id.titleText)
+            val title: GradientTextView = view.findViewById(R.id.titleText)
             val desc: TextView = view.findViewById(R.id.descText)
         }
 

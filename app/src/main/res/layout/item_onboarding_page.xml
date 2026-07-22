@@ -13,31 +13,29 @@
         android:gravity="center_horizontal">
 
         <FrameLayout
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_marginBottom="@dimen/space_10">
+            android:layout_width="220dp"
+            android:layout_height="280dp"
+            android:layout_marginBottom="@dimen/space_8">
 
             <com.nyavo.nrscreen.ui.OnboardingIllustrationView
                 android:id="@+id/illustration"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_illustration_glow"
-                android:alpha="0.4" />
         </FrameLayout>
 
-        <TextView
+        <com.nyavo.nrscreen.ui.GradientTextView
             android:id="@+id/titleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_4"
             android:gravity="center"
-            android:textAppearance="@style/TextAppearance.Nyavscrn.HeadlineLarge"
-            android:textColor="@color/text_primary"
-            android:letterSpacing="0.05" />
+            android:text="Bienvenue"
+            android:textSize="32sp"
+            android:letterSpacing="0.08"
+            app:startColor="@color/cyan_400"
+            app:endColor="@color/nebula_500"
+            app:gradientAngle="0" />
 
         <TextView
             android:id="@+id/descText"
