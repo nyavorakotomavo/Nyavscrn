@@ -35,7 +35,6 @@ class GridTestActivity : AppCompatActivity() {
                 finishButton.alpha = 0f
                 finishButton.animate().alpha(1f).setDuration(500).start()
                 instructionText.text = "Balayage termine. Appuyez pour voir le rapport."
-                instructionText.visibility = View.VISIBLE
             }
             handler.postDelayed(this, 500)
         }
@@ -50,10 +49,15 @@ class GridTestActivity : AppCompatActivity() {
         finishButton = findViewById(R.id.finishButton)
         instructionText = findViewById(R.id.instructionText)
 
-        // Recupere la map de calibration si elle existe
+        // Recupere la map de calibration si dimensions compatibles
         val existingMap = DeadZoneMapHolder.current
         if (existingMap != null) {
-            gridTestView.deadZoneMap = existingMap
+            gridTestView.post {
+                val viewMap = gridTestView.deadZoneMap
+                if (viewMap != null && viewMap.rows == existingMap.rows && viewMap.cols == existingMap.cols) {
+                    gridTestView.deadZoneMap = existingMap
+                }
+            }
         }
 
         gridTestView.onCellDiscovered = { count ->
@@ -62,7 +66,6 @@ class GridTestActivity : AppCompatActivity() {
             if (finishButton.visibility == View.VISIBLE) {
                 finishButton.visibility = View.GONE
                 instructionText.text = "Balayez l'ecran sans pause. Ne levez pas le doigt."
-                instructionText.visibility = View.VISIBLE
             }
         }
 

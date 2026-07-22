@@ -47,8 +47,6 @@ class CalibrationActivity : AppCompatActivity() {
 
         gridTestView.ghostDetectionMode = true
 
-        // Recupere la map creee par GridTestView (avec les bonnes dimensions d'ecran)
-        // et la stocke pour le test qui suit
         gridTestView.post {
             val map = gridTestView.deadZoneMap
             if (map != null) {
