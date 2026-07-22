@@ -8,35 +8,42 @@ import android.os.Looper
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.widget.Button
+import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 import com.nyavo.nrscreen.R
 import com.nyavo.nrscreen.data.DeadZoneMapHolder
 
 class GridTestActivity : AppCompatActivity() {
 
     private lateinit var gridTestView: GridTestView
-    private lateinit var finishButton: Button
+    private lateinit var finishButton: MaterialButton
+    private lateinit var instructionContainer: LinearLayout
     private lateinit var instructionText: TextView
+    private lateinit var coverageBar: View
+    private lateinit var coverageText: TextView
+    private lateinit var cellsText: TextView
     private val handler = Handler(Looper.getMainLooper())
 
     private var lastDiscoveryTime = 0L
     private var discoveredCount = 0
+    private var totalCells = 0
 
     private val completionChecker = object : Runnable {
         override fun run() {
             val map = gridTestView.deadZoneMap ?: return
-            val totalCells = map.rows * map.cols
             val percent = discoveredCount.toFloat() / totalCells
             val timeSinceLastDiscovery = System.currentTimeMillis() - lastDiscoveryTime
+
+            updateHUD(percent, discoveredCount, totalCells)
+
             if (percent > 0.60 && timeSinceLastDiscovery > 5000 && finishButton.visibility != View.VISIBLE) {
-                finishButton.visibility = View.VISIBLE
-                finishButton.alpha = 0f
-                finishButton.animate().alpha(1f).setDuration(500).start()
-                instructionText.text = "Balayage termine. Appuyez pour voir le rapport."
+                showFinishButton()
             }
-            handler.postDelayed(this, 500)
+
+            handler.postDelayed(this, 200)
         }
     }
 
@@ -47,25 +54,23 @@ class GridTestActivity : AppCompatActivity() {
 
         gridTestView = findViewById(R.id.gridTestView)
         finishButton = findViewById(R.id.finishButton)
+        instructionContainer = findViewById(R.id.instructionContainer)
         instructionText = findViewById(R.id.instructionText)
+        coverageBar = findViewById(R.id.coverageBar)
+        coverageText = findViewById(R.id.coverageText)
+        cellsText = findViewById(R.id.cellsText)
 
-        // Recupere la map de calibration si dimensions compatibles
         val existingMap = DeadZoneMapHolder.current
         if (existingMap != null) {
-            gridTestView.post {
-                val viewMap = gridTestView.deadZoneMap
-                if (viewMap != null && viewMap.rows == existingMap.rows && viewMap.cols == existingMap.cols) {
-                    gridTestView.deadZoneMap = existingMap
-                }
-            }
+            gridTestView.deadZoneMap = existingMap
+            totalCells = existingMap.rows * existingMap.cols
         }
 
         gridTestView.onCellDiscovered = { count ->
             discoveredCount += count
             lastDiscoveryTime = System.currentTimeMillis()
             if (finishButton.visibility == View.VISIBLE) {
-                finishButton.visibility = View.GONE
-                instructionText.text = "Balayez l'ecran sans pause. Ne levez pas le doigt."
+                hideFinishButton()
             }
         }
 
@@ -74,13 +79,46 @@ class GridTestActivity : AppCompatActivity() {
             gridTestView.finalizeTest()
             val intent = Intent(this, DeadZoneMapActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()
         }
 
         finishButton.visibility = View.GONE
-        instructionText.text = "Balayez l'ecran sans pause. Ne levez pas le doigt."
+        instructionText.text = getString(R.string.test_instruction)
         lastDiscoveryTime = System.currentTimeMillis()
         handler.post(completionChecker)
+    }
+
+    private fun updateHUD(percent: Float, discovered: Int, total: Int) {
+        val percentInt = (percent * 100).toInt()
+        coverageText.text = "$percentInt%"
+        cellsText.text = "$discovered / $total"
+
+        val barWidth = (resources.displayMetrics.widthPixels * percent).toInt()
+        val params = coverageBar.layoutParams
+        params.width = barWidth
+        coverageBar.layoutParams = params
+
+        coverageText.setTextColor(when {
+            percent < 0.3 -> getColor(R.color.cyan_400)
+            percent < 0.6 -> getColor(R.color.star_400)
+            else -> getColor(R.color.nebula_400)
+        })
+    }
+
+    private fun showFinishButton() {
+        finishButton.visibility = View.VISIBLE
+        finishButton.startAnimation(AnimationUtils.loadAnimation(this, R.anim.button_reveal))
+        instructionContainer.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out))
+        instructionContainer.visibility = View.INVISIBLE
+        instructionText.text = "Balayage termine. Appuyez pour voir le rapport."
+        instructionContainer.visibility = View.VISIBLE
+        instructionContainer.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in))
+    }
+
+    private fun hideFinishButton() {
+        finishButton.visibility = View.GONE
+        instructionText.text = getString(R.string.test_instruction)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
